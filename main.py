@@ -6,7 +6,6 @@ import ffmpeg
 import threading
 from tkinter.messagebox import showinfo
 
-
 root = tk.Tk()
 
 root.title("Video Converter")
@@ -31,15 +30,10 @@ def select_output_path(output_format):
     output_path = filedialog.asksaveasfilename(defaultextension=output_format)
     return output_path
 
-def file_already_exists(output_path):
-    if Path(output_path).exists():
-        messagebox.showerror("Error", "File already exists")
-        return True
-    return False
-
 def toggle_ui_elements(converting):
     if converting:
         progress_bar.start()
+        progress_bar.grid()
         convert_btn['state'] = "disabled"
         project_btn['state'] = "disabled"
         format_combobox['state'] = "disabled"
@@ -59,10 +53,9 @@ def convert_video(video_path, output_format):
         if video_ext not in ['.mp4', '.avi', '.mkv']:
             raise ValueError("Not a valid video file")
         output_path = select_output_path(output_format)
-        if file_already_exists(output_path):
-            raise ValueError("File already exists")
         new_file = output_path
-        ffmpeg.input(video_path).output(new_file).run()
+        conversion = ffmpeg.input(video_path).output(new_file)
+        conversion.run(overwrite_output=True)
     except Exception as e:
         error_msg = str(e)
         messagebox.showerror("Error", error_msg)
@@ -89,16 +82,11 @@ project_btn.grid(column=1, row=2,  sticky='nswe', padx=5, pady=5)
 selected_video_label = tk.Label(text="", bg="#FEF6E9")
 selected_video_label.grid(column=1, row=3, sticky='nswe', padx=5, pady=5)
 
-# style = ttk.Style.configure("bar.Horizontal.TProgressbar", troughcolor="FEF6E9",
-#                 bordercolor="FEF6E9", background="FEF6E9", lightcolor="FEF6E9",
-#                 darkcolor="FEF6E9")
-s = ttk.Style()
-s.theme_use('default')
-s.configure("red.Horizontal.TProgressbar", bordercolor="#FEF6E9", darkcolor="#FEF6E9", lightcolor="#FEF6E9", foreground='#FEF6E9', background='#FEF6E9')
 progress_bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, mode='determinate', style="red.Horizontal.TProgressbar")
 progress_bar.grid(column=1, row=6, sticky='nswe', padx=5, pady=5)
+progress_bar.grid_remove()
 
-convert_btn = ttk.Button(text="CONVERT!", command=convert_button_command, highlightbackground="#FEF6E9")
+convert_btn = tk.Button(text="CONVERT!", command=convert_button_command, highlightbackground="#FEF6E9")
 convert_btn.grid(column=1, row=5,  sticky='swe', padx=5, pady=5)
 
 root.mainloop()
