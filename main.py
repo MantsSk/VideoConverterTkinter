@@ -4,7 +4,6 @@ from pathlib import Path
 from PIL import ImageTk
 import ffmpeg
 import threading
-from tkinter.messagebox import showinfo
 
 root = tk.Tk()
 
@@ -33,16 +32,19 @@ def select_output_path(output_format):
 def toggle_ui_elements(converting):
     if converting:
         progress_bar.start()
-        progress_bar.grid()
+        progress_bar.lift()
+        s.configure("red.Horizontal.TProgressbar", foreground='orange', background='orange')
         convert_btn['state'] = "disabled"
         project_btn['state'] = "disabled"
         format_combobox['state'] = "disabled"
     else:
+        progress_bar.stop()
+        messagebox.showinfo(message='Video conversion was completed!')
+        progress_bar.lower()
+        s.configure("red.Horizontal.TProgressbar", foreground='FEF6E9', background='FEF6E9')
         format_combobox['state'] = "normal"
         convert_btn['state'] = "normal"
         project_btn['state'] = "normal"
-        progress_bar.stop()
-        showinfo(message='Video conversion was completed!')
 
 def convert_video(video_path, output_format):
     toggle_ui_elements(True)
@@ -54,18 +56,18 @@ def convert_video(video_path, output_format):
             raise ValueError("Not a valid video file")
         output_path = select_output_path(output_format)
         new_file = output_path
-        conversion = ffmpeg.input(video_path).output(new_file)
-        conversion.run(overwrite_output=True)
+        ffmpeg.input(video_path).output(new_file).run(overwrite_output=True)
     except Exception as e:
         error_msg = str(e)
         messagebox.showerror("Error", error_msg)
     toggle_ui_elements(False)
 
-
 def convert_button_command():
     video_path = selected_video_label.cget("text")
     output_format = format_combobox.get()
-    t = threading.Thread(target=convert_video, args=(video_path, output_format)).start()
+    thread = threading.Thread(target=convert_video, args=(video_path, output_format))
+    thread.start()
+
 
 logo_img = ImageTk.PhotoImage(file="logo.png")
 logo_widget = tk.Label(root, image=logo_img, bg="#FEF6E9")
@@ -82,9 +84,11 @@ project_btn.grid(column=1, row=2,  sticky='nswe', padx=5, pady=5)
 selected_video_label = tk.Label(text="", bg="#FEF6E9")
 selected_video_label.grid(column=1, row=3, sticky='nswe', padx=5, pady=5)
 
+s = ttk.Style()
+s.theme_use('clam')
+s.configure("red.Horizontal.TProgressbar", foreground='FEF6E9', background='FEF6E9')
 progress_bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, mode='determinate', style="red.Horizontal.TProgressbar")
 progress_bar.grid(column=1, row=6, sticky='nswe', padx=5, pady=5)
-progress_bar.grid_remove()
 
 convert_btn = tk.Button(text="CONVERT!", command=convert_button_command, highlightbackground="#FEF6E9")
 convert_btn.grid(column=1, row=5,  sticky='swe', padx=5, pady=5)
